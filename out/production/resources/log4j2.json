@@ -1,0 +1,136 @@
+{
+	"configuration": {
+		"name": "Default",
+		"packages": "biz.paluch.logging.gelf.log4j2",
+		"properties": {
+			"property": [
+				{
+					"name": "log-path",
+					"value": "/trb/logsistemas"
+				},
+				{
+					"name": "log-name",
+					"value": "${bundle:application:spring.application.name}"
+				},
+				{
+					"name": "log-level",
+					"value": "DEBUG"
+				},
+				{
+					"name": "log-pattern",
+					"value": "[%-5level] [%X{request-key}] [%t] %d{yyyy-MM-dd HH:mm:ss.SSS} %c{1}.%M:%L - %msg%n"
+				},
+				{
+					"name": "log-file-pattern",
+					"value": "%d{yyyy-MM-dd}#%i"
+				}
+			]
+		},
+		"appenders": {
+			"Console": {
+				"name": "Console-Appender",
+				"target": "SYSTEM_OUT",
+				"PatternLayout": {
+					"pattern": "${log-pattern}"
+				}
+			},
+			"RollingFile": [
+				{
+					"name": "Application-Appender",
+					"fileName": "${log-path}/${log-name}/${log-name}.log",
+					"filePattern": "${log-path}/${log-name}/${log-name}.${log-file-pattern}.log.gz",
+					"PatternLayout": {
+						"pattern": "${log-pattern}"
+					},
+					"Policies": {
+						"TimeBasedTriggeringPolicy": {
+							"interval": "1"
+						},
+						"SizeBasedTriggeringPolicy": {
+							"size": "100 MB"
+						}
+					},
+					"DefaultRolloverStrategy": {
+						"compressionLevel": 9,
+						"Delete": {
+							"basePath": "${log-path}/${log-name}",
+							"IfFileName": {
+								"glob": "${log-name}.*.log.gz",
+								"IfAccumulatedFileSize": {
+									"exceeds": "500 MB"
+								}
+							}
+						}
+					}
+				}
+			],
+			"Gelf": {
+				"name": "Graylog-Appender",
+				"host": "udp:graylog-ecpjdsv.tribanco.com.br",
+				"port": "8100",
+				"version": "1.1",
+				"extractStackTrace": "true",
+				"filterStackTrace": "true",
+				"facility": "${bundle:application:spring.application.name}",
+				"mdcProfiling": "true",
+				"includeFullMdc": "true",
+				"maximumMessageSize": "8192",
+				"originHost": "%host",
+				"Field": [
+					{
+						"name": "className",
+						"pattern": "%C"
+					},
+					{
+						"name": "line",
+						"pattern": "%L"
+					},
+					{
+						"name": "method",
+						"pattern": "%M"
+					},
+					{
+						"name": "log-level",
+						"pattern": "%-5level"
+					},
+					{
+						"name": "thread",
+						"pattern": "%t"
+					},
+					{
+						"name": "thread-id",
+						"pattern": "%tid"
+					}
+				]
+			}
+		},
+		"loggers": {
+			"logger": [
+				{
+					"name": "br.com.tribanco.garantiasecpj",
+					"level": "${log-level}",
+					"additivity": "false",
+					"appender-ref": [
+						{
+							"ref": "Graylog-Appender"
+						},
+						{
+							"ref": "Application-Appender"
+						},
+						{
+							"ref": "Console-Appender"
+						}
+					]
+				}
+			],
+			"root": {
+				"level": "INFO",
+				"appender-ref": [
+					{
+						"ref": "Console-Appender"
+					}
+				]
+			}
+		}
+	}
+}
